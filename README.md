@@ -2,6 +2,8 @@
 
 A growing quality-of-life pack for Graveyard Keeper 2, using the game's own interface.
 
+[Download on Nexus Mods](https://www.nexusmods.com/graveyardkeeper2/mods/111) | [GitHub releases](https://github.com/espenl/keepers-little-helpers/releases)
+
 ## Version 0.2.4 - first public preview
 
 Two helpers are included in one plugin:
