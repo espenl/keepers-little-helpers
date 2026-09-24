@@ -19,6 +19,8 @@ The menu annotates only recipes the game already displays. Reminders use activit
 
 ![Built counts and gold materials hint on hover](release/build-menu-0.3.4.jpg)
 
+![Pinned materials and carried inventory counts](release/materials-pin-0.3.4.jpg)
+
 ![Pause-menu entry](release/pause-menu-0.3.3.jpg)
 
 ![Independent helper settings](release/helper-settings-0.3.3.jpg)
