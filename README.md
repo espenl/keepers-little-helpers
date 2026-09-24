@@ -4,28 +4,16 @@ A growing quality-of-life pack for Graveyard Keeper 2, using the game's own inte
 
 [Download on Nexus Mods](https://www.nexusmods.com/graveyardkeeper2/mods/111) | [GitHub releases](https://github.com/espenl/keepers-little-helpers/releases)
 
-## Version 0.3.4 - public preview
+## Version 0.3.5 - public preview
 
 Four independently switchable helpers are included in one plugin:
 
 - **Building counts:** compact `Built: 1` labels in the native building menu. Kitchen upgrades show `Current: Tier I` or `Current: Tier II`. Zero counts stay hidden. Counts apply to the building desk's area.
-- **Materials pin:** Hover a blueprint for a gold tracking hint. Shift-click a blueprint to track its required materials in a side panel. Counts show carried inventory. Click the X to clear it; pins last for the current session.
+- **Materials pin:** Hover a blueprint for a gold tracking hint. Shift-click a blueprint to track its required materials in a side panel. Native item icons and Have / Need counts show carried inventory. Drag the header to move the panel; its position is remembered during the session. Click the native X to clear it; pins last for the current session.
 - **Move buildings (preview):** select Move at a building desk, select an idle structure, then click a valid spot in the same area. Right-click cancels. Normal yard workstations and nearby tool-rack bonuses are supported.
 - **Morning reminders:** the player thinks aloud about known activities after dawn. Reminders wait until you are free to act. Press **F8** to repeat today's reminders.
 
 The menu annotates only recipes the game already displays. Reminders use activity unlocks and available readiness flags to avoid revealing future activities. The building menu and settings use native UI, and the materials panel uses the game's font and panel artwork.
-
-## Screenshots
-
-![Built counts and gold materials hint on hover](release/build-menu-0.3.4.jpg)
-
-![Pinned materials and carried inventory counts](release/materials-pin-0.3.4.jpg)
-
-![Pause-menu entry](release/pause-menu-0.3.3.jpg)
-
-![Independent helper settings](release/helper-settings-0.3.3.jpg)
-
-![Native reminder on a quiet day](release/morning-reminder-0.3.3.jpg)
 
 ## Requirements
 
@@ -68,3 +56,16 @@ Created by Kontuu. Uses BepInEx and Harmony at runtime and the game's existing i
 Source and bug reports: https://github.com/espenl/keepers-little-helpers
 
 Build on Windows using `powershell -File tools/build.ps1 -GameDirectory "YOUR_GAME_FOLDER"`. This requires the installed game and BepInEx; their assemblies are not redistributed. Run `powershell -File tools/test.ps1` for the standalone rules checks. Run `python tools/package.py` to create the release ZIP.
+
+## Screenshots
+
+![Built counts and gold materials hint on hover](release/build-menu-0.3.4.jpg)
+
+![Pinned materials and carried inventory counts](release/materials-pin-0.3.5.jpg)
+
+![Pause-menu entry](release/pause-menu-0.3.3.jpg)
+
+![Independent helper settings](release/helper-settings-0.3.3.jpg)
+
+![Native reminder on a quiet day](release/morning-reminder-0.3.3.jpg)
+

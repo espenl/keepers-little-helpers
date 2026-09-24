@@ -10,7 +10,7 @@ using LazyBearTechnology;
 
 namespace KeepersJournal
 {
-    [BepInPlugin("local.espen.keepersjournal", "Keeper's Little Helpers", "0.3.4")]
+    [BepInPlugin("local.espen.keepersjournal", "Keeper's Little Helpers", "0.3.5")]
     public sealed class JournalPlugin : BaseUnityPlugin
     {
         internal static JournalPlugin Instance;
@@ -44,7 +44,7 @@ namespace KeepersJournal
             gameObject.AddComponent<HelpersSettings>().Initialize(Config, harmony);
             MainGame.OnGameStarted += OnStarted;
             MainGame.OnGoToMainMenu += OnLeft;
-            Logger.LogInfo("Keeper's Little Helpers 0.3.4 loaded: native blueprint counts + morning speech bubbles. F8 repeats today's reminders.");
+            Logger.LogInfo("Keeper's Little Helpers 0.3.5 loaded: native blueprint counts + morning speech bubbles. F8 repeats today's reminders.");
         }
 
         private void OnStarted()

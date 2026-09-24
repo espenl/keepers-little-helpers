@@ -20,7 +20,7 @@ namespace KeepersJournal
         private readonly string[] details = {
             "Show existing structures in each building desk's menu.",
             "Show unlocked activities in a native thought bubble each morning. F8 repeats today's reminders.",
-            "Shift-click a blueprint to pin its materials. The side panel counts carried items. Click the X to clear it. Pins last for this session.",
+            "Shift-click a blueprint to pin its materials. Have / Need counts carried items. Drag the panel header to move it. Click the X to clear it. Pins last for this session.",
             "Use Move in a building desk menu. Select an idle, freestanding structure and then a clear spot in the same area. Right-click cancels. Tool-rack bonuses follow placement. Fitted attachments and special structures are not supported yet."
         };
         private int selected;

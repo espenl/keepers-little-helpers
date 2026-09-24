@@ -3,7 +3,7 @@ from zipfile import ZipFile, ZIP_DEFLATED
 import hashlib
 
 root = Path(__file__).resolve().parent.parent
-version = "0.3.4"
+version = "0.3.5"
 archive = root / "dist" / ("KeepersLittleHelpers-" + version + ".zip")
 # Explicit allowlist: never bundle saves, diagnostics, local configs, or game assemblies.
 files = {"BepInEx/plugins/KeepersJournal/KeepersJournal.dll": root / "dist/KeepersJournal.dll"}

@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.3.5 - native materials tracker
+
+- Reuse the full native window background, header, border and graphical close button.
+- Show native item icons, brighter names and aligned Have / Need counts using native sufficient/missing colours.
+- Fit the panel to wrapped names and material rows.
+- Drag the header to reposition the panel; remember its position during the session and keep it within HUD bounds.
+
 ## 0.3.4 - readable materials hint
 
 - Restore the materials hint on blueprint mouseover.
