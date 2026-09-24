@@ -1,10 +1,9 @@
 # Ideas for future releases
 
-This pack can grow as we discover useful improvements. These are candidates, not promised features.
-
-- Independent enable/disable settings for every helper.
-- More gameplay coverage for building desks and daily activities.
+- Expand and verify moving support for fitted attachments and other building areas.
+- More gameplay coverage for building desks, material tracking, and daily activities.
+- Improve materials tracking options and controller interaction.
 - Additional languages.
 - New small helpers proposed and tested during play.
 
-Keep each addition focused, use native UI where practical, respect progression, and record changes under a new version. The current pack ships as one plugin with two helpers.
+These are candidates, not promised features. Keep additions focused, use native UI where practical, and respect progression.

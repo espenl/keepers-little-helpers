@@ -10,12 +10,12 @@ using LazyBearTechnology;
 
 namespace KeepersJournal
 {
-    [BepInPlugin("local.espen.keepersjournal", "Keeper's Little Helpers", "0.2.4")]
+    [BepInPlugin("local.espen.keepersjournal", "Keeper's Little Helpers", "0.3.3")]
     public sealed class JournalPlugin : BaseUnityPlugin
     {
         internal static JournalPlugin Instance;
         private Harmony harmony;
-        private ConfigEntry<bool> morningEnabled, quietMorning;
+        private ConfigEntry<bool> morningEnabled, quietMorning, buildingsEnabled;
         private ConfigEntry<KeyCode> repeatKey;
         private ConfigEntry<float> bubbleSeconds;
         private readonly MorningTracker tracker = new MorningTracker();
@@ -30,6 +30,7 @@ namespace KeepersJournal
         private void Awake()
         {
             Instance = this;
+            buildingsEnabled = Config.Bind("Buildings", "Enabled", true, "Show existing building counts in the native build menu.");
             morningEnabled = Config.Bind("Morning", "Enabled", true, "A native player speech bubble each morning, after dawn and when you are free to act.");
             quietMorning = Config.Bind("Morning", "MentionQuietMornings", true, "On mornings with no known activities, say there is nothing special on the calendar.");
             repeatKey = Config.Bind("Controls", "RepeatReminderKey", KeyCode.F8, "Repeat today's known reminders using the native speech bubble.");
@@ -38,9 +39,12 @@ namespace KeepersJournal
             harmony = new Harmony("local.espen.keepersjournal");
             harmony.Patch(AccessTools.Method(typeof(UIBuildingWidget), "Redraw"),
                 postfix: new HarmonyMethod(typeof(JournalPlugin), "AddBuildingCount"));
+            gameObject.AddComponent<MoveHelper>().Initialize(Config, harmony);
+            gameObject.AddComponent<MaterialsPin>().Initialize(Config, harmony);
+            gameObject.AddComponent<HelpersSettings>().Initialize(Config, harmony);
             MainGame.OnGameStarted += OnStarted;
             MainGame.OnGoToMainMenu += OnLeft;
-            Logger.LogInfo("Keeper's Little Helpers 0.2.4 loaded: native blueprint counts + morning speech bubbles. F8 repeats today's reminders.");
+            Logger.LogInfo("Keeper's Little Helpers 0.3.3 loaded: native blueprint counts + morning speech bubbles. F8 repeats today's reminders.");
         }
 
         private void OnStarted()
@@ -71,11 +75,12 @@ namespace KeepersJournal
             if (!ready) return;
             if (MainGame.Instance == null || MainGame.Instance.gameState != MainGame.GameState.InGame
                 || !ReferenceEquals(currentSave, MainGame.Instance.GameSave)) { OnLeft(); return; }
-            if (Input.GetKeyDown(repeatKey.Value)) manualRequest = true;
+            if (morningEnabled.Value && Input.GetKeyDown(repeatKey.Value)) manualRequest = true;
             if (Time.unscaledTime < nextCheck) return;
             nextCheck = Time.unscaledTime + 0.5f;
             try
             {
+                if (!morningEnabled.Value) { pendingLines.Clear(); manualRequest = false; return; }
                 var env = currentSave.environmentData;
                 if (pendingDay != env.Day) pendingLines.Clear();
                 bool due = morningEnabled.Value && tracker.IsDue(env.Day, env.TimeOfDay);
@@ -122,17 +127,18 @@ namespace KeepersJournal
                 && UnityEngine.Object.FindObjectsByType<UIDialogBubble>(FindObjectsSortMode.None).Length == 0) bubbleShowing = false;
         }
 
-        private static void AddBuildingCount(UIBuildingWidget __instance, TextMeshProUGUI ___nameLabel)
+        private static void AddBuildingCount(UIBuildingWidget __instance, TextMeshProUGUI ___nameLabel, TextMeshProUGUI ___descriptionLabel)
         {
             try
             {
+                BlueprintRowNotes.Get(__instance, ___nameLabel).SetCount("");
+                if (Instance == null || !Instance.buildingsEnabled.Value) return;
                 if (WidgetData == null || ___nameLabel == null || MainGame.Instance == null) return;
                 var data = WidgetData.GetValue(__instance) as UIBuildingWidgetData;
                 if (data == null || data.BuildData == null || data.BuildData.Definition == null || data.WorldZoneData == null) return;
                 string caption = DescribeBuilding(data.BuildData, data.WorldZoneData);
                 if (string.IsNullOrEmpty(caption)) return;
-                // A separate line keeps counts visible even for long recipe names.
-                ___nameLabel.text += "\n<size=75%><color=#B5CFA3>" + caption + "</color></size>";
+                BlueprintRowNotes.Get(__instance, ___nameLabel).SetCount(caption);
                 if (Instance != null && !Instance.buildLogged)
                 {
                     Instance.Logger.LogInfo("Native build-menu counts applied successfully.");
@@ -165,6 +171,7 @@ namespace KeepersJournal
             {
                 if (!members.Contains(wgo.UniqueId.Id)) continue;
                 facts.Add(new BuildingFact { Id = wgo.id, Zone = zone.id,
+                    Group = wgo.Definition == null ? null : wgo.Definition.wgoGroup,
                     Hidden = wgo.IsHidden, Temporary = wgo.isTempObject, Present = true });
                 if (!wgo.IsHidden && !wgo.isTempObject && wgo.id == "bed")
                 {

@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.3.3 - helpers and placement preview
+
+- Add Shift-click material tracking with carried-item counts and a clickable X.
+- Add independent helper switches under Esc > Keeper's Little Helpers.
+- Add a Move preview for idle structures in the same building area, including normal yard workstations.
+- Recalculate nearby tool-rack links when moving supported benches. Fitted attachments remain restricted.
+- Give built counts and the Shift-click hint their own space beneath native blueprint labels and icons.
+- Count planted and harvest-ready garden/vineyard plots as built.
+- Fix pause-menu startup hook, first-open label, and dialog-button errors.
+
+
 ## 0.2.4 - Keeper's Little Helpers
 
 - Rename the pack and plugin display name.

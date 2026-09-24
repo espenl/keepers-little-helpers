@@ -17,6 +17,26 @@ class RuleTests
             new BuildingFact {Id="bench_2",Zone="yard"}, new BuildingFact {Id="bench",Zone="yard",Hidden=true},
             new BuildingFact {Id="bench",Zone="yard",Temporary=true}, new BuildingFact {Id="bench",Zone="yard",Removing=true,Present=false}
         };
+        var plots = new List<BuildingFact> {
+            new BuildingFact {Id="garden_empty",Zone="garden",Group="garden_bed"},
+            new BuildingFact {Id="crop_growing_fixture",Zone="garden",Group="garden_bed"},
+            new BuildingFact {Id="crop_ready_fixture",Zone="garden",Group="garden_bed"},
+            new BuildingFact {Id="garden_empty_place",Zone="garden",Group="garden_bed"},
+            new BuildingFact {Id="garden_empty",Zone="other",Group="garden_bed"},
+            new BuildingFact {Id="hidden_crop_fixture",Zone="garden",Group="garden_bed",Hidden=true},
+            new BuildingFact {Id="deleted_crop_fixture",Zone="garden",Group="garden_bed",Present=false},
+            new BuildingFact {Id="preview_crop_fixture",Zone="garden",Group="garden_bed",Temporary=true},
+            new BuildingFact {Id="garden_sign",Zone="garden",Group="signs"},
+            new BuildingFact {Id="vine_crop_fixture",Zone="garden",Group="vineyard_objects"}
+        };
+        var plotCount=JournalRules.CountBuildings(plots,"garden","garden_empty","garden_empty_place");
+        Check(plotCount.Built==3 && plotCount.InProgress==1,"Garden count includes growing/ready plots but excludes construction and unrelated objects");
+        plots[0].Id="planted_fixture";
+        Check(JournalRules.CountBuildings(plots,"garden","garden_empty","garden_empty_place").Built==3,"Planting must not reduce bed count");
+        plots[1].Id="garden_empty";
+        Check(JournalRules.CountBuildings(plots,"garden","garden_empty","garden_empty_place").Built==3,"Harvesting must not change bed count");
+        Check(JournalRules.CountBuildings(plots,"garden","vineyard_empty","vineyard_empty_place").Built==1,"Vineyard beds remain separate from garden beds");
+        Check(JournalRules.CountBuildings(plots,"garden","garden_sign","garden_sign_place").Built==1,"Other recipes retain exact counts");
         var count = JournalRules.CountBuildings(objects,"yard","bench","bench_place");
         Check(count.Built==2 && count.InProgress==1,"Area/type filtering or construction count failed");
         Check(JournalRules.CountBuildings(objects,"other","bench","bench_place").Built==1,"Counts leaked between areas");

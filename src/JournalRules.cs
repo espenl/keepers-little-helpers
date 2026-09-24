@@ -6,7 +6,7 @@ namespace KeepersJournal
 {
     public sealed class BuildingFact
     {
-        public string Id, Zone;
+        public string Id, Zone, Group;
         public bool Hidden, Temporary, Removing;
         public bool Present = true;
     }
@@ -46,8 +46,14 @@ namespace KeepersJournal
             foreach (var item in objects)
             {
                 if (item.Zone != zone || item.Hidden || item.Temporary || !item.Present) continue;
-                if (item.Id == resultId) count.Built++;
-                else if (placementId != resultId && item.Id == placementId) count.InProgress++;
+                // Planted and harvest-ready beds are different WGO IDs in the same native group.
+                // Check construction first, so unfinished plots remain separate.
+                if (placementId != resultId && item.Id == placementId) count.InProgress++;
+                else if (item.Id == resultId
+                    || (resultId == "garden_empty" && item.Group == "garden_bed"
+                        && !string.IsNullOrEmpty(item.Id) && !item.Id.EndsWith("_place", StringComparison.Ordinal))
+                    || (resultId == "vineyard_empty" && item.Group == "vineyard_objects"
+                        && !string.IsNullOrEmpty(item.Id) && !item.Id.EndsWith("_place", StringComparison.Ordinal))) count.Built++;
             }
             return count;
         }

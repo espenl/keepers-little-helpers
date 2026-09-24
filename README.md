@@ -4,14 +4,22 @@ A growing quality-of-life pack for Graveyard Keeper 2, using the game's own inte
 
 [Download on Nexus Mods](https://www.nexusmods.com/graveyardkeeper2/mods/111) | [GitHub releases](https://github.com/espenl/keepers-little-helpers/releases)
 
-## Version 0.2.4 - first public preview
+## Version 0.3.3 - public preview
 
-Two helpers are included in one plugin:
+Four independently switchable helpers are included in one plugin:
 
 - **Building counts:** compact `Built: 1` labels in the native building menu. Kitchen upgrades show `Current: Tier I` or `Current: Tier II`. Zero counts stay hidden. Counts apply to the building desk's area.
+- **Materials pin:** Shift-click a blueprint to track its required materials in a side panel. Counts show carried inventory. Click the X to clear it; pins last for the current session.
+- **Move buildings (preview):** select Move at a building desk, select an idle structure, then click a valid spot in the same area. Right-click cancels. Normal yard workstations and nearby tool-rack bonuses are supported.
 - **Morning reminders:** the player thinks aloud about known activities after dawn. Reminders wait until you are free to act. Press **F8** to repeat today's reminders.
 
-The menu annotates only recipes the game already displays. Reminders use activity unlocks and available readiness flags to avoid revealing future activities. No separate overlay or custom artwork.
+The menu annotates only recipes the game already displays. Reminders use activity unlocks and available readiness flags to avoid revealing future activities. The building menu and settings use native UI, and the materials panel uses the game's font and panel artwork.
+
+## Screenshots
+
+![Pause-menu entry](release/pause-menu-0.3.3.jpg)
+
+![Independent helper settings](release/helper-settings-0.3.3.jpg)
 
 ## Requirements
 
@@ -29,22 +37,19 @@ For an update, close the game and replace the existing DLL. Keep only one copy o
 
 ## Settings and removal
 
-After the first launch, settings are in `BepInEx/config/local.espen.keepersjournal.cfg`.
+Open **Esc > Keeper's Little Helpers** to toggle building counts, morning reminders, materials pins, and moving independently. Use **Next helper** to select a feature, then **Turn on/off**. Settings are saved immediately.
 
-- `Morning / Enabled`: enable or disable morning reminders.
-- `Morning / MentionQuietMornings`: say something on mornings with no known activities.
-- `Morning / BubbleSeconds`: reminder display duration (4-20 seconds).
-- `Controls / RepeatReminderKey`: defaults to F8.
+Advanced settings remain in `BepInEx/config/local.espen.keepersjournal.cfg`, including quiet-morning messages, reminder duration, and the optional F8 repeat shortcut. Close the game before editing that file.
 
-Close the game before editing settings. Building counts are always enabled in this release; independent feature switches are planned.
-
-To uninstall, close the game and remove `BepInEx/plugins/KeepersJournal/KeepersJournal.dll`. The plugin does not edit saves or construct buildings.
+To uninstall, close the game and remove `BepInEx/plugins/KeepersJournal/KeepersJournal.dll`. Moves already saved remain in your save. Back up saves before using the moving preview.
 
 ## Validation and known limits
 
-414 automated checks pass. House counts were checked against a loaded save, and the simplified native layout was confirmed in gameplay by the tester. Native reminder calls have been exercised, but every unlocked activity has not been checked across a full calendar cycle.
+419 automated rules checks pass (counts, spoiler gates, reminder timing, duplicates, and save switching). These checks do not cover moving or UI layout. The pause-settings flow has been exercised in-game. Moving and the revised blueprint-row layout are preview features with limited gameplay coverage. Native reminder calls have been exercised, but every unlocked activity has not been checked across a full calendar cycle.
 
-Messages are currently English. Unknown script-only building actions are left without a count. Counts distinguish exact structure types; fixed house storage is not counted as a player-built chest recipe. Game updates may require a plugin update.
+Moving keeps the original structure data, inventory, and upgrades. Active/queued work, assigned workers, fitted attachments, planted beds, and special/scripted structures remain restricted. Only ordinary yard placement areas and structures without a special placement area are supported. Tool-rack links are recalculated after moving; other linked equipment remains restricted.
+
+Messages are currently English. Unknown script-only building actions are left without a count. Garden and vineyard counts include planted and harvest-ready plots. Counts otherwise distinguish exact structure types; fixed house storage is not counted as a player-built chest recipe. Game updates may require a plugin update.
 
 For a bug report, include the game build, pack version, building desk and recipe involved, expected versus displayed count, and relevant lines from `BepInEx/LogOutput.log`. Avoid sharing your save unless needed.
 
