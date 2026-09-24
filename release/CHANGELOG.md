@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.3.4 - readable materials hint
+
+- Restore the materials hint on blueprint mouseover.
+- Increase note text size and use gold for the hint, including unaffordable recipes.
+- Reserve hint space so hovering does not shift the rows.
+
+
 ## 0.3.3 - helpers and placement preview
 
 - Add Shift-click material tracking with carried-item counts and a clickable X.

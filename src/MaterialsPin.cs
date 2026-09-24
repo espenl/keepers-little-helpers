@@ -29,6 +29,8 @@ namespace KeepersJournal
             enabledSetting = config.Bind("Materials", "Enabled", true, "Shift-click a blueprint to pin its materials. Click the X to clear the pin. Counts show carried items only.");
             harmony.Patch(AccessTools.Method(typeof(UIBuildingWidget), "OnPress"), prefix: new HarmonyMethod(typeof(MaterialsPin), "PinInsteadOfBuild"));
             harmony.Patch(AccessTools.Method(typeof(UIBuildingWidget), "Redraw"), postfix: new HarmonyMethod(typeof(MaterialsPin), "DrawHint"));
+            harmony.Patch(AccessTools.Method(typeof(UIBuildingWidget), "OnOver"), postfix: new HarmonyMethod(typeof(MaterialsPin), "HoverHint"));
+            harmony.Patch(AccessTools.Method(typeof(UIBuildingWidget), "OnOut"), postfix: new HarmonyMethod(typeof(MaterialsPin), "UnhoverHint"));
             MainGame.OnGoToMainMenu += Clear;
         }
         private static bool PinInsteadOfBuild(UIBuildingWidget __instance)
@@ -53,6 +55,16 @@ namespace KeepersJournal
             bool show = instance != null && instance.enabledSetting.Value && data != null
                 && data.BuildData != null && data.BuildData.Definition != null && data.GetCurrentNeedItems().Count > 0;
             BlueprintRowNotes.Get(__instance, ___nameLabel).SetHint(show);
+        }
+        private static void HoverHint(UIBuildingWidget __instance)
+        {
+            var notes = __instance.GetComponent<BlueprintRowNotes>();
+            if (notes != null) notes.SetHovered(instance != null && instance.enabledSetting.Value);
+        }
+        private static void UnhoverHint(UIBuildingWidget __instance)
+        {
+            var notes = __instance.GetComponent<BlueprintRowNotes>();
+            if (notes != null) notes.SetHovered(false);
         }
         private void EnsurePanel(UIBuildingWidget source)
         {
@@ -132,7 +144,7 @@ namespace KeepersJournal
         private LayoutElement noteLayout;
         private float originalMinHeight;
         private string count;
-        private bool hint;
+        private bool hint, hovered;
         public static BlueprintRowNotes Get(UIBuildingWidget row, TextMeshProUGUI original)
         {
             var notes = row.GetComponent<BlueprintRowNotes>();
@@ -144,8 +156,8 @@ namespace KeepersJournal
             go.transform.SetAsLastSibling();
             notes.label = go.AddComponent<TextMeshProUGUI>();
             notes.label.font = original.font; notes.label.fontSharedMaterial = original.fontSharedMaterial;
-            notes.label.fontSize = original.fontSize * 0.7f;
-            notes.label.color = original.color; notes.label.raycastTarget = false;
+            notes.label.fontSize = original.fontSize * 0.8f;
+            notes.label.color = Color.white; notes.label.raycastTarget = false;
             notes.label.alignment = TextAlignmentOptions.TopLeft;
             notes.noteLayout = go.AddComponent<LayoutElement>();
             notes.noteLayout.flexibleWidth = 1;
@@ -155,11 +167,12 @@ namespace KeepersJournal
             return notes;
         }
         public void SetCount(string value) { count = value; Refresh(); }
-        public void SetHint(bool value) { hint = value; Refresh(); }
+        public void SetHint(bool value) { hint = value; hovered = false; Refresh(); }
+        public void SetHovered(bool value) { hovered = value; Refresh(); }
         private void Refresh()
         {
             label.text = string.IsNullOrEmpty(count) ? "" : "<color=#B5CFA3>" + count + "</color>";
-            if (hint) label.text += (label.text.Length == 0 ? "" : "\n") + "Shift-click to pin materials";
+            if (hint) label.text += (label.text.Length == 0 ? "" : "\n") + (hovered ? "<color=#E6C58A>" : "<color=#E6C58A00>") + "Shift-click to pin materials</color>";
             bool visible = label.text.Length > 0;
             label.gameObject.SetActive(visible);
             rowLayout.minHeight = originalMinHeight;

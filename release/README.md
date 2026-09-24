@@ -4,12 +4,12 @@ A growing quality-of-life pack for Graveyard Keeper 2, using the game's own inte
 
 [Download on Nexus Mods](https://www.nexusmods.com/graveyardkeeper2/mods/111) | [GitHub releases](https://github.com/espenl/keepers-little-helpers/releases)
 
-## Version 0.3.3 - public preview
+## Version 0.3.4 - public preview
 
 Four independently switchable helpers are included in one plugin:
 
 - **Building counts:** compact `Built: 1` labels in the native building menu. Kitchen upgrades show `Current: Tier I` or `Current: Tier II`. Zero counts stay hidden. Counts apply to the building desk's area.
-- **Materials pin:** Shift-click a blueprint to track its required materials in a side panel. Counts show carried inventory. Click the X to clear it; pins last for the current session.
+- **Materials pin:** Hover a blueprint for a gold tracking hint. Shift-click a blueprint to track its required materials in a side panel. Counts show carried inventory. Click the X to clear it; pins last for the current session.
 - **Move buildings (preview):** select Move at a building desk, select an idle structure, then click a valid spot in the same area. Right-click cancels. Normal yard workstations and nearby tool-rack bonuses are supported.
 - **Morning reminders:** the player thinks aloud about known activities after dawn. Reminders wait until you are free to act. Press **F8** to repeat today's reminders.
 
