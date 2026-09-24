@@ -21,6 +21,8 @@ The menu annotates only recipes the game already displays. Reminders use activit
 
 ![Independent helper settings](release/helper-settings-0.3.3.jpg)
 
+![Native reminder on a quiet day](release/morning-reminder-0.3.3.jpg)
+
 ## Requirements
 
 Tested on Windows x64, Steam build 25506711, game version 1.005.
