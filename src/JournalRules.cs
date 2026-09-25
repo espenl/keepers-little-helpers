@@ -1,9 +1,30 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
 namespace KeepersJournal
 {
+    // One delayed action per visit. Loading a save seeds the current area without
+    // acting; crossing into a different area or enabling the helper arms it.
+    public sealed class AreaVisitTrigger
+    {
+        private object area;
+        private bool enabled, pending;
+        private float due;
+        public void Reset(object currentArea, bool isEnabled)
+        { area = currentArea; enabled = isEnabled; pending = false; }
+        public bool Poll(object currentArea, bool isEnabled, bool safe, float now)
+        {
+            if (!ReferenceEquals(area, currentArea) || (!enabled && isEnabled))
+            { area = currentArea; pending = currentArea != null && isEnabled; due = now + 1f; }
+            enabled = isEnabled;
+            if (!isEnabled) pending = false;
+            if (!pending || !safe || now < due) return false;
+            pending = false;
+            return true;
+        }
+    }
+
     public sealed class BuildingFact
     {
         public string Id, Zone, Group;
@@ -64,18 +85,18 @@ namespace KeepersJournal
             var unlocked = new HashSet<string>(unlockedDays ?? new string[0]);
             var lines = new List<string>();
             if (unlocked.Contains("day_wrath") && sermonReady)
-                lines.Add("I can give a sermon today. Better remember my prayer!");
+                lines.Add("sermon");
             if (boardKnown && unlocked.Contains("day_pride") && boardReady)
-                lines.Add("The order board is open today. I should check it.");
+                lines.Add("board");
             if (unlocked.Contains("day_sloth") && battleReady)
-                lines.Add("The battle window is open today. I should check my preparations.");
+                lines.Add("battle");
             int expected;
             if (unlocked.Contains("day_envy") && dayNumbers.TryGetValue("day_envy", out expected) && weekday == expected && resurrectionPower)
-                lines.Add("A storm day. I should check the resurrection equipment.");
+                lines.Add("storm");
             if (unlocked.Contains("day_lust") && dayNumbers.TryGetValue("day_lust", out expected) && weekday == expected)
-                lines.Add("Today's the day to check for new arrivals.");
+                lines.Add("arrivals");
             if (unlocked.Contains("day_gluttony") && dayNumbers.TryGetValue("day_gluttony", out expected) && weekday == expected)
-                lines.Add("I should check the panic-reduction machine today.");
+                lines.Add("panic");
             return lines;
         }
     }

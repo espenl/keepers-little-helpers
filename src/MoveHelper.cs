@@ -51,7 +51,7 @@ namespace KeepersJournal
         {
             var data = WidgetData.GetValue(__instance) as UIBuildingWidgetData;
             if (data == null || !ReferenceEquals(data.BuildData, MoveEntry)) return;
-            ___nameLabel.text = "Move\n<size=70%>Relocate an idle structure</size>";
+            ___nameLabel.text = L.T("Move\n<size=70%>Relocate an idle structure</size>");
             instance.RememberFont(___nameLabel);
         }
         private void RememberFont(TextMeshProUGUI original)
@@ -61,6 +61,7 @@ namespace KeepersJournal
             go.transform.SetParent(original.canvas.transform, false);
             statusLabel = go.AddComponent<TextMeshProUGUI>();
             statusLabel.font = original.font; statusLabel.fontSharedMaterial = original.fontSharedMaterial;
+            L.Font(statusLabel);
             statusLabel.fontSize = 21; statusLabel.color = original.color; statusLabel.raycastTarget = false;
             statusLabel.alignment = TextAlignmentOptions.Center;
             var rect = statusLabel.rectTransform;
@@ -74,7 +75,7 @@ namespace KeepersJournal
             __result = false; // Never call demolition in move mode, even for rejected selections.
             var target = Selection.GetValue(null) as Wgo;
             BuildingDef definition;
-            string reason = "Select a structure.";
+            string reason = L.T("Select a structure.");
             if (instance.switching || !TryGetMovable(target, out definition, out reason))
             {
                 if (!instance.switching) { instance.hint = reason; Debug.Log("Little Helpers move rejected: " + (target == null ? "no selection" : target.Data.id) + " | " + reason); }
@@ -86,19 +87,21 @@ namespace KeepersJournal
         }
         private static bool TryGetMovable(Wgo target, out BuildingDef definition, out string reason)
         {
-            definition = null; reason = "Select a freestanding, idle structure. Right-click to cancel.";
+            definition = null; reason = L.T("Select a freestanding, idle structure. Right-click to cancel.");
             if (target == null || target.Data == null || !target.IsBuildRemovable()) return false;
             var d = target.Data;
             var current = BuildController.Instance.CurrentWorldZone;
-            if (d.IsHidden || d.isTempObject || d.id.EndsWith("_place", StringComparison.Ordinal)) { reason = "Finish construction before moving this."; return false; }
-            if (current == null || d.WorldZoneData == null || d.WorldZoneData.id != current.Data.id) { reason = "Select a structure in this building area."; return false; }
-            if (d.Worker != null || d.CraftComponent.IsStarted || d.CraftComponent.HasCraftsInQueue)
-            { reason = "Finish the work and unassign the worker before moving this."; return false; }
+            if (d.IsHidden || d.isTempObject) { reason = L.T("Select a placed structure, not a preview."); return false; }
+            if (current == null || d.WorldZoneData == null || d.WorldZoneData.id != current.Data.id) { reason = L.T("Select a structure in this building area."); return false; }
+            bool unfinished = d.id.EndsWith("_place", StringComparison.Ordinal);
+            bool idleConstruction = unfinished && HasOnlyManualConstruction(d);
+            if (d.Worker != null || ((!idleConstruction) && (d.CraftComponent.IsStarted || d.CraftComponent.HasCraftsInQueue)))
+            { reason = L.T("Finish the work and unassign the worker before moving this."); return false; }
             if (HasFixedExtensions(d) || d.WorkbenchParents.Count > 0 || d.AdditionalWgoPartsData.Count > 0)
-            { reason = "This structure has linked equipment and cannot be moved yet."; return false; }
+            { reason = L.T("This structure has linked equipment and cannot be moved yet."); return false; }
             if (!string.IsNullOrEmpty(d.Definition.attachedScript) || !string.IsNullOrEmpty(d.Definition.npcLifeSimGroup)
                 || !string.IsNullOrEmpty(d.occupiedPointOfInterest) || GardenBedNavigation.IsGardenPlot(d))
-            { reason = "This special structure cannot be moved yet."; return false; }
+            { reason = L.T("This special structure cannot be moved yet."); return false; }
             GameBalance.Me.buildableWgos.TryGetValue(d.id, out definition);
             if (definition == null)
             {
@@ -112,10 +115,24 @@ namespace KeepersJournal
                 }
             }
             if (definition == null || definition.buildingMode != BuildingDef.BuildingMode.Place
-                || (!string.IsNullOrEmpty(definition.customBuildAreaId) && definition.customBuildAreaId != "yard_place")
                 || (definition.chooseCustomBuildAreaType != BuildingDef.BuildAreaChoosingType.None
                     && definition.chooseCustomBuildAreaType != BuildingDef.BuildAreaChoosingType.Soft))
-            { reason = "Only freestanding structures can be moved in this preview."; return false; }
+            { reason = L.T("Only freestanding structures can be moved in this preview."); return false; }
+            // A construction exception is valid only for the exact placement
+            // recipe and a real replacement result, not arbitrary _place objects.
+            if (unfinished && (definition.wgoId != d.id || !d.Definition.replaceToWgoOnDie.HasExpression))
+            { reason = L.T("This construction site cannot be moved yet."); return false; }
+            return true;
+        }
+        private static bool HasOnlyManualConstruction(WgoData data)
+        {
+            var craft = data.CraftComponent;
+            if (craft.IsFinishDelayed || craft.HasPreFinishUpdate || craft.IsDestroyingCraftActive) return false;
+            foreach (var queued in craft.CraftElementsQueue)
+            {
+                var def = queued.Def as CraftDef;
+                if (def == null || def.isAuto || def.isObjDestroyCraft) return false;
+            }
             return true;
         }
         private static bool IsToolRack(WgoData data)
@@ -167,7 +184,7 @@ namespace KeepersJournal
                 placement = BuildData.GetDataForBuild(definition);
                 BuildController.Instance.DisableBuildMode();
                 BuildController.Instance.EnableBuildMode(placement, zone, null, null);
-                hint = "Choose a clear spot. Click to move; right-click to cancel.";
+                hint = L.T("Choose a clear spot. Click to move; right-click to cancel.");
             }
             catch (Exception e) { Debug.LogError("Little Helpers move preview failed: " + e); Clear(); }
             finally { switching = false; }
@@ -193,7 +210,7 @@ namespace KeepersJournal
             var pointer = __instance.PointerObject as WgoBuildPointer;
             if (self.switching || pointer == null || self.selected == null || !ReferenceEquals(self.save, MainGame.Instance.GameSave)) return false;
             pointer.UpdateSelectionCellsState();
-            if (!(bool)Active.GetValue(pointer)) { self.hint = "That spot is blocked. Choose a clear spot."; return false; }
+            if (!(bool)Active.GetValue(pointer)) { self.hint = L.T("That spot is blocked. Choose a clear spot."); return false; }
             BuildingDef unused; string reason;
             if (!TryGetMovable(self.selected, out unused, out reason)) { self.hint = reason; return false; }
             Vector3 destination = pointer.Target.Data.Position;
@@ -209,7 +226,7 @@ namespace KeepersJournal
                 Debug.LogError("Little Helpers move failed; restoring original position: " + e);
                 try { Relocate(self.selected, self.zone.Data, originalPosition); }
                 catch (Exception rollback) { Debug.LogError("Little Helpers relocation rollback failed: " + rollback); }
-                self.hint = "Move failed. Check the log before saving.";
+                self.hint = L.T("Move failed. Check the log before saving.");
             }
             return false;
         }
@@ -228,7 +245,7 @@ namespace KeepersJournal
             wgo.Data.RefreshCustomNavMeshCutUnit();
             AccessTools.Method(typeof(Wgo), "TryRegisterInChunkManager").Invoke(wgo, null);
             Physics.SyncTransforms();
-            RefreshToolRackLinks(wgo);
+            if (!wgo.Data.id.EndsWith("_place", StringComparison.Ordinal)) RefreshToolRackLinks(wgo);
         }
         private IEnumerator Finish()
         {
@@ -247,7 +264,7 @@ namespace KeepersJournal
             bool selecting = controller != null && controller.IsBuildModeActive && pointer != null && pointer.PointerObject != null && ReferenceEquals(((BuildPointerObject)pointer.PointerObject).BuildData, MoveEntry);
             bool placing = selected != null && controller != null && controller.IsBuildModeActive;
             statusLabel.gameObject.SetActive(selecting || placing);
-            statusLabel.text = hint ?? "Select a freestanding, idle structure. Right-click to cancel.";
+            statusLabel.text = hint ?? L.T("Select a freestanding, idle structure. Right-click to cancel.");
         }
         private void Clear() { selected = null; zone = null; placement = null; save = null; hint = null; if (statusLabel != null) statusLabel.gameObject.SetActive(false); }
         private void OnDestroy() { MainGame.OnGoToMainMenu -= Clear; Clear(); if(statusLabel != null) Destroy(statusLabel.gameObject); instance = null; }

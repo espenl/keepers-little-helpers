@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Reflection;
 using BepInEx;
@@ -10,10 +10,10 @@ using LazyBearTechnology;
 
 namespace KeepersJournal
 {
-    [BepInPlugin("local.espen.keepersjournal", "Keeper's Little Helpers", "0.3.5")]
+    [BepInPlugin("local.espen.keepersjournal", "Keeper's Little Helpers", "0.3.7")]
     public sealed class JournalPlugin : BaseUnityPlugin
     {
-        internal static JournalPlugin Instance;
+        public static JournalPlugin Instance;
         private Harmony harmony;
         private ConfigEntry<bool> morningEnabled, quietMorning, buildingsEnabled;
         private ConfigEntry<KeyCode> repeatKey;
@@ -30,6 +30,7 @@ namespace KeepersJournal
         private void Awake()
         {
             Instance = this;
+            L.Initialize(Config, System.IO.Path.GetDirectoryName(Info.Location), delegate(string message) { Logger.LogWarning(message); });
             buildingsEnabled = Config.Bind("Buildings", "Enabled", true, "Show existing building counts in the native build menu.");
             morningEnabled = Config.Bind("Morning", "Enabled", true, "A native player speech bubble each morning, after dawn and when you are free to act.");
             quietMorning = Config.Bind("Morning", "MentionQuietMornings", true, "On mornings with no known activities, say there is nothing special on the calendar.");
@@ -41,10 +42,13 @@ namespace KeepersJournal
                 postfix: new HarmonyMethod(typeof(JournalPlugin), "AddBuildingCount"));
             gameObject.AddComponent<MoveHelper>().Initialize(Config, harmony);
             gameObject.AddComponent<MaterialsPin>().Initialize(Config, harmony);
+            gameObject.AddComponent<StorageHelpers>().Initialize(Config, harmony);
+            gameObject.AddComponent<WorldHelpers>().Initialize(Config, harmony);
+            gameObject.AddComponent<QuickStack>().Initialize(Config);
             gameObject.AddComponent<HelpersSettings>().Initialize(Config, harmony);
             MainGame.OnGameStarted += OnStarted;
             MainGame.OnGoToMainMenu += OnLeft;
-            Logger.LogInfo("Keeper's Little Helpers 0.3.5 loaded: native blueprint counts + morning speech bubbles. F8 repeats today's reminders.");
+            Logger.LogInfo("Keeper's Little Helpers 0.3.7 loaded: native helpers and translation support.");
         }
 
         private void OnStarted()
@@ -72,6 +76,7 @@ namespace KeepersJournal
         }
         private void Update()
         {
+            L.Refresh();
             if (!ready) return;
             if (MainGame.Instance == null || MainGame.Instance.gameState != MainGame.GameState.InGame
                 || !ReferenceEquals(currentSave, MainGame.Instance.GameSave)) { OnLeft(); return; }
@@ -87,14 +92,9 @@ namespace KeepersJournal
                 if (!CanSpeak()) return;
                 if (pendingLines.Count == 0 && (due || manualRequest))
                 {
-                    var days = new Dictionary<string, int>();
-                    foreach (var id in LazyConsts.ConstDefs.AllDays) days[id] = ConstDef.Get(id).IntValue;
-                    var lines = JournalRules.MorningLines(currentSave.knowledgeSystem.unlockedCustomHudDaySprites,
-                        env.CurrentDayNumber, days, MainGame.PlayerData.GetRes("sermon_ready") >= 1f,
-                        MainGame.PlayerData.interactedWithChalkBoardOnce, MainGame.PlayerData.GetResInt("chalk_board_enabled") > 0,
-                        MainGame.PlayerData.GetResInt("battle_ready") > 0, MainGame.PlayerData.GetResInt("resurrection_has_power") > 0);
+                    var lines = CurrentMorningLines(true);
                     if (lines.Count == 0 && (quietMorning.Value || manualRequest))
-                        lines.Add("Nothing special on my calendar today. Back to work!");
+                        lines.Add("quiet");
                     foreach (var line in lines) pendingLines.Enqueue(line);
                     pendingDay = env.Day;
                     // A manual repeat before dawn must not consume the coming morning.
@@ -104,8 +104,10 @@ namespace KeepersJournal
                 if (pendingLines.Count > 0)
                 {
                     string line = pendingLines.Dequeue();
+                    if (WorldHelpers.Suppressed(line)) return;
+                    if (line != "quiet" && !CurrentMorningLines(true).Contains(line)) return;
                     bubbleShowing = true;
-                    Bubble.Talk(new PhraseData(true, null, line, delegate {
+                    Bubble.Talk(new PhraseData(true, null, ReminderText.Get(line), delegate {
                         bubbleShowing = false; safeAfter = Time.unscaledTime + 1.5f;
                     }, null, SpeechBubbleType.Think, UIBasicBubble.ForceCornerPosition.Auto, bubbleSeconds.Value));
                     // Also recover if a scene change destroys the bubble without invoking its callback.
@@ -120,6 +122,19 @@ namespace KeepersJournal
                 if (!failureLogged) Logger.LogWarning("Reminder postponed: " + e);
                 failureLogged = true; safeAfter = Time.unscaledTime + 15f;
             }
+        }
+        internal static List<string> CurrentMorningLines(bool hideCompleted)
+        {
+            if (MainGame.Instance == null || MainGame.PlayerData == null) return new List<string>();
+            var current = MainGame.Instance.GameSave;
+            var days = new Dictionary<string, int>();
+            foreach (var id in LazyConsts.ConstDefs.AllDays) days[id] = ConstDef.Get(id).IntValue;
+            var lines = JournalRules.MorningLines(current.knowledgeSystem.unlockedCustomHudDaySprites,
+                current.environmentData.CurrentDayNumber, days, MainGame.PlayerData.GetRes("sermon_ready") >= 1f,
+                MainGame.PlayerData.interactedWithChalkBoardOnce, MainGame.PlayerData.GetResInt("chalk_board_enabled") > 0,
+                MainGame.PlayerData.GetResInt("battle_ready") > 0, MainGame.PlayerData.GetResInt("resurrection_has_power") > 0);
+            if (hideCompleted) lines.RemoveAll(WorldHelpers.Suppressed);
+            return lines;
         }
         private void LateUpdate()
         {
@@ -180,7 +195,7 @@ namespace KeepersJournal
             }
             string blueprint = build.Definition.id;
             if (blueprint == "bed_upgrade_s")
-                return upgradedBeds > 0 ? "Current: Upgraded" : standardBeds > 0 ? "Current: Standard" : null;
+                return upgradedBeds > 0 ? L.T("Current: Upgraded") : standardBeds > 0 ? L.T("Current: Standard") : null;
             if (blueprint == "home_upgrade_s")
                 return null; // Script changes the house; it does not place a countable building.
             string placedId = build.WgoId;
@@ -199,9 +214,10 @@ namespace KeepersJournal
             {
                 string baseId = blueprint == "kitchen_oven_up_s" ? "kitchen_oven" : "kitchen_table";
                 var lower = JournalRules.CountBuildings(facts, zone.id, baseId, baseId);
-                return count.Built > 0 ? "Current: Tier II" : lower.Built > 0 ? "Current: Tier I" : null;
+                return count.Built > 0 ? L.T("Current: Tier II") : lower.Built > 0 ? L.T("Current: Tier I") : null;
             }
-            return count.Caption;
+            return (count.Built > 0 ? L.F("Built: {0}", count.Built) : "")
+                + (count.InProgress > 0 ? (count.Built > 0 ? " | " : "") + L.F("Building: {0}", count.InProgress) : "");
         }
         private void OnDestroy()
         {

@@ -7,6 +7,22 @@ class RuleTests
     static void Check(bool result, string label) { checks++; if (!result) throw new Exception(label); }
     static void Main()
     {
+        var visit = new AreaVisitTrigger();
+        var areaA = new object(); var areaB = new object();
+        visit.Reset(areaA, true);
+        Check(!visit.Poll(areaA,true,true,10), "Loading does not auto-deposit");
+        Check(!visit.Poll(areaB,true,true,11), "Arrival waits for zone to settle");
+        Check(!visit.Poll(areaB,true,false,12), "Menus postpone transfer");
+        Check(visit.Poll(areaB,true,true,13), "Transfer once when safe");
+        Check(!visit.Poll(areaB,true,true,15), "No repeated emptying within one visit");
+        Check(!visit.Poll(areaA,true,true,16), "Reentry arms a fresh visit");
+        Check(!visit.Poll(areaB,true,true,16.5f), "Changing areas replaces pending destination");
+        Check(!visit.Poll(areaB,false,true,18), "Disabling cancels pending transfer");
+        Check(!visit.Poll(areaB,true,true,19), "Enabling schedules once");
+        Check(visit.Poll(areaB,true,true,20), "Enable in current area works");
+        visit.Reset(areaB,true);
+        Check(!visit.Poll(areaB,true,true,21), "Save switch clears pending state");
+        Check(!visit.Poll(null,true,true,22), "Outside any area never stacks");
         Check(JournalRules.KnownScriptResult("kitchen_oven_up_s")=="kitchen_oven_t2", "Oven result mapping");
         Check(JournalRules.KnownScriptResult("kitchen_table_up_s")=="kitchen_table_t2", "Table result mapping");
         Check(JournalRules.KnownScriptResult("zombie_supplier_station_house_s")=="zombie_supplier_station_mini", "Station result mapping");
@@ -79,6 +95,29 @@ class RuleTests
         morning.Reset(); morning.Load(1,0.1f);
         Check(morning.IsDue(1,0.25f),"Save-switch state leaked");
         Check(!morning.IsDue(1,0.85f),"Stale reminder after nightfall");
+        var one = new PinnedPlan { Id = "bench", Quantity = 2 };
+        one.Costs.Add("wood", 4); one.Costs.Add("iron", 1);
+        var two = new PinnedPlan { Id = "furnace", Quantity = 3 };
+        two.Costs.Add("iron", 5); two.Costs.Add("stone", 8);
+        var totals = HelperRules.Totals(new[] { one, two });
+        Check(totals["wood"] == 8 && totals["iron"] == 17 && totals["stone"] == 24, "Overlapping plans not aggregated");
+        one.Quantity = 1; two.Quantity = 0;
+        Check(HelperRules.Totals(new[] { one, two })["iron"] == 1, "Quantity reduction left stale materials");
+        one.Quantity = 99; one.Costs["wood"] = int.MaxValue;
+        Check(HelperRules.Totals(new[] { one })["wood"] == int.MaxValue, "Material overflow wrapped negative");
+        Check(HelperRules.Totals(new PinnedPlan[0]).Count == 0, "Empty pins retained costs");
+        Check(HelperRules.PlainName("  <b>Wood</b>\n", 40) == "bWood/b", "Chest name can inject formatting");
+        Check(HelperRules.PlainName(null, 40) == "", "Blank chest rename failed");
+        Check(HelperRules.PlainName(new string('a', 70), 40).Length == 40, "Chest name exceeds limit");
+        for (int available = 0; available <= 30; available++)
+            for (int capacity = 0; capacity <= 35; capacity++)
+            {
+                int moved = HelperRules.TransferCount(available, capacity, true, false, true);
+                Check(moved >= 0 && moved <= capacity && moved <= available && available - moved + moved == available, "Transfer violates conservation/capacity");
+                Check(HelperRules.TransferCount(available, capacity, true, true, true) == 0, "Protected item transferable");
+                Check(HelperRules.TransferCount(available, capacity, false, false, true) == 0, "New item type transferable");
+                Check(HelperRules.TransferCount(available, capacity, true, false, false) == 0, "Nonstackable item transferable");
+            }
         Console.WriteLine("PASS: "+checks+" checks (build-menu counts, spoiler gates, dawn, duplicates, and save switching).");
     }
 }

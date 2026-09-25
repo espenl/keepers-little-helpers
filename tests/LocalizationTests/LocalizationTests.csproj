@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><OutputType>Exe</OutputType><TargetFramework>net8.0</TargetFramework></PropertyGroup>
+  <PropertyGroup><GameDirectory Condition="'$(GameDirectory)' == ''">C:/Program Files (x86)/Steam/steamapps/common/Graveyard Keeper 2</GameDirectory></PropertyGroup>
+  <ItemGroup>
+    <Compile Include="../../src/TranslationCatalog.cs" Link="TranslationCatalog.cs" />
+    <Compile Include="../../src/JournalRules.cs" Link="JournalRules.cs" />
+    <Reference Include="Newtonsoft.Json"><HintPath>$(GameDirectory)/GraveyardKeeper2_Data/Managed/Newtonsoft.Json.dll</HintPath></Reference>
+  </ItemGroup>
+</Project>
