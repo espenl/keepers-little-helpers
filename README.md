@@ -85,4 +85,4 @@ Build on Windows using `powershell -File tools/build.ps1 -GameDirectory "YOUR_GA
 
 ## Optional Framework settings
 
-![Optional GK2 Framework settings integration](release/framework-settings-0.3.7.png)
+![Optional GK2 Framework settings integration](release/framework-settings-0.3.7.jpg)
