@@ -65,6 +65,16 @@ Source and bug reports: https://github.com/espenl/keepers-little-helpers
 
 Build on Windows using `powershell -File tools/build.ps1 -GameDirectory "YOUR_GAME_FOLDER"`. This requires the installed game and BepInEx; their assemblies are not redistributed. Run `powershell -File tools/test.ps1` for the standalone rules checks. Run `python tools/package.py` to create the release ZIP.
 
+## Native helper settings
+
+![Open the helpers from the Esc menu](release/pause-menu-0.3.7.jpg)
+
+![Building and materials helpers](release/settings-building-0.3.7.jpg)
+
+![Storage and Quick Stack helpers](release/settings-storage-0.3.7.jpg)
+
+![Spoiler-aware reminder settings](release/settings-reminders-0.3.7.jpg)
+
 ## Optional Framework settings
 
 ![Optional GK2 Framework settings integration](release/framework-settings-0.3.7.png)
