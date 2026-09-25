@@ -19,3 +19,5 @@ Also includes the following 0.3.6 changes, previously published on Nexus:
 - Use first-person Quick Stack feedback in the character's native thought bubble.
 
 Requires BepInEx 5.4.23.5 Windows x64. Close the game and extract the update, replacing the existing DLL and English catalog. Preserve community translation files. Keep only one copy of each plugin installed. Moving remains a preview with restrictions on active work and special or linked structures.
+
+![Optional Framework settings](https://raw.githubusercontent.com/espenl/keepers-little-helpers/main/release/framework-settings-0.3.7.png)
